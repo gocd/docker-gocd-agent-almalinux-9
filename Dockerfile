@@ -20,30 +20,30 @@
 FROM docker.io/chainguard/bash:latest AS gocd-agent-unzip
 ARG TARGETARCH
 ARG UID=1000
-RUN curl --fail --location --silent --show-error "https://download.gocd.org/binaries/26.1.0-22803/generic/go-agent-26.1.0-22803.zip" > /tmp/go-agent-26.1.0-22803.zip && \
-    unzip -q /tmp/go-agent-26.1.0-22803.zip -d / && \
+RUN curl --fail --location --silent --show-error "https://download.gocd.org/binaries/26.2.0-23275/generic/go-agent-26.2.0-23275.zip" > /tmp/go-agent-26.2.0-23275.zip && \
+    unzip -q /tmp/go-agent-26.2.0-23275.zip -d / && \
     mkdir -p /go-agent/wrapper /go-agent/bin && \
-    mv -v /go-agent-26.1.0/LICENSE /go-agent/LICENSE && \
-    mv -v /go-agent-26.1.0/*.md /go-agent && \
-    mv -v /go-agent-26.1.0/bin/go-agent /go-agent/bin/go-agent && \
-    mv -v /go-agent-26.1.0/lib /go-agent/lib && \
-    mv -v /go-agent-26.1.0/logs /go-agent/logs && \
-    mv -v /go-agent-26.1.0/run /go-agent/run && \
-    mv -v /go-agent-26.1.0/wrapper-config /go-agent/wrapper-config && \
+    mv -v /go-agent-26.2.0/LICENSE /go-agent/LICENSE && \
+    mv -v /go-agent-26.2.0/*.md /go-agent && \
+    mv -v /go-agent-26.2.0/bin/go-agent /go-agent/bin/go-agent && \
+    mv -v /go-agent-26.2.0/lib /go-agent/lib && \
+    mv -v /go-agent-26.2.0/logs /go-agent/logs && \
+    mv -v /go-agent-26.2.0/run /go-agent/run && \
+    mv -v /go-agent-26.2.0/wrapper-config /go-agent/wrapper-config && \
     WRAPPERARCH=$(if [ $TARGETARCH == amd64 ]; then echo x86-64; elif [ $TARGETARCH == arm64 ]; then echo arm-64; else echo $TARGETARCH is unknown!; exit 1; fi) && \
-    mv -v /go-agent-26.1.0/wrapper/wrapper-linux-$WRAPPERARCH* /go-agent/wrapper/ && \
-    mv -v /go-agent-26.1.0/wrapper/libwrapper-linux-$WRAPPERARCH* /go-agent/wrapper/ && \
-    mv -v /go-agent-26.1.0/wrapper/wrapper.jar /go-agent/wrapper/ && \
+    mv -v /go-agent-26.2.0/wrapper/wrapper-linux-$WRAPPERARCH /go-agent/wrapper/ && \
+    mv -v /go-agent-26.2.0/wrapper/libwrapper-linux-$WRAPPERARCH.so /go-agent/wrapper/ && \
+    mv -v /go-agent-26.2.0/wrapper/wrapper.jar /go-agent/wrapper/ && \
     chown -R ${UID}:0 /go-agent && chmod -R g=u /go-agent
 FROM docker.io/almalinux:9-minimal
 ARG TARGETARCH
 
-LABEL gocd.version="26.1.0" \
+LABEL gocd.version="26.2.0" \
   description="GoCD agent based on docker.io/almalinux:9-minimal" \
   maintainer="GoCD Team <go-cd-dev@googlegroups.com>" \
   url="https://www.gocd.org" \
-  gocd.full.version="26.1.0-22803" \
-  gocd.git.sha="55b7b460510bb739c1ae6d226ff7fb650596dca2"
+  gocd.full.version="26.2.0-23275" \
+  gocd.git.sha="03ae39c9d55089cc90f13ab3b6f0ba848da47349"
 
 # force encoding
 ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8
@@ -58,13 +58,13 @@ RUN \
 # add our user and group first to make sure their IDs get assigned consistently, regardless of whatever dependencies get added
   useradd -l -u ${UID} -g root -d /home/go -m go && \
   microdnf remove -y shadow-utils && \
-  printf '[epel9]\nname=Extra Packages for Enterprise Linux 9 - $basearch\nbaseurl=https://download.fedoraproject.org/pub/epel/9/Everything/$basearch/\nenabled=0\ngpgcheck=1\ngpgkey=https://download.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-9' > /etc/yum.repos.d/epel.repo && \
+  printf '[epel9]\nname=Extra Packages for Enterprise Linux 9 - $basearch\nbaseurl=https://dl.fedoraproject.org/pub/epel/9/Everything/$basearch/ https://download.fedoraproject.org/pub/epel/9/Everything/$basearch/\nenabled=0\ngpgcheck=1\ngpgkey=https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-9' > /etc/yum.repos.d/epel.repo && \
   microdnf --enablerepo=epel9 install -y tini-static && \
   rm /etc/yum.repos.d/epel.repo && \
   microdnf install -y git-core openssh-clients bash unzip curl-minimal procps-ng coreutils-single glibc-langpack-en tar && \
   microdnf clean all && \
   rm -rf /var/cache/dnf && \
-  curl --fail --location --silent --show-error "https://github.com/adoptium/temurin25-binaries/releases/download/jdk-25.0.3%2B9/OpenJDK25U-jre_$(uname -m | sed -e s/86_//g)_linux_hotspot_25.0.3_9.tar.gz" --output /tmp/jre.tar.gz && \
+  curl --fail --location --silent --show-error "https://github.com/adoptium/temurin25-binaries/releases/download/jdk-25.0.5.1%2B2/OpenJDK25U-jre_$(uname -m | sed -e s/86_//g)_linux_hotspot_25.0.5.1_2.tar.gz" --output /tmp/jre.tar.gz && \
   mkdir -p /gocd-jre && \
   tar -xf /tmp/jre.tar.gz -C /gocd-jre --strip 1 && \
   rm -rf /tmp/jre.tar.gz && \
